@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alzheimer Classifier</title>
+</head>
+
+<body>
+
+    <form action="/" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".jpg,.png" />
+        <button type="submit">Upload and Predict</button>
+    </form>
+
+    {% if prediction_results %}
+    <h2>Prediction Results:</h2>
+    <ul>
+        {% for result in prediction_results %}
+        <li>{{ result.class_name }}: {{ result.probability }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if uploaded_image %}
+    <h2>Uploaded Image:</h2>
+    <img src="data:image/png;base64,{{ uploaded_image }}" alt="Uploaded Image">
+    {% endif %}
+    
+</body>
+
+</html>
