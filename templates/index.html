@@ -5,31 +5,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alzheimer Classifier</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path = 'css/style.css') }}" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+        integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body class="container mt-5">
+<body class="container mt-3">
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
-        <img src="{{ url_for('static', path='img/logo-ede.png') }}" alt="EDE Logo" width="120" height="120"
-            class="d-inline-block align-text-top">
+        <a href="/">
+            <img src="{{ url_for('static', path = 'img/logo-ede.png') }}" alt="EDE Logo" width="120" height="120"
+                class="d-inline-block align-text-top" href="/" />
+        </a>
         <a class="navbar-brand" href="#">Alzheimer Classifier</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"><span
+                class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Home</a>
+                    <a class="nav-link" href="/home">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">About</a>
+                    <a class="nav-link" href="/about">About</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Contact</a>
+                    <a class="nav-link" href="/contact">Contact</a>
                 </li>
             </ul>
         </div>
@@ -37,16 +38,16 @@
 
     <form action="/" method="post" enctype="multipart/form-data" class="mb-3">
         <div class="input-group">
-            <input type="file" name="file" accept=".jpg,.png" class="form-control form-control-sm">
+            <input type="file" name="file" accept=".jpg,.png" class="form-control form-control-sm" required />
             <button type="submit" class="btn btn-primary btn-sm">Upload and Predict</button>
         </div>
     </form>
 
     <div class="row">
         <div class="col-md-6 d-flex align-items-center justify-content-center">
-            <div id='chart' class='chart' ”></div>
-            <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
-            <script type='text/javascript'>
+            <div id="chart" class="chart"></div>
+            <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+            <script type="text/javascript">
                 var graphs = {{ prediction_results | safe}};
                 Plotly.plot('chart', graphs, {});
             </script>
@@ -54,9 +55,12 @@
 
         <div class="col-md-6 d-flex align-items-center justify-content-center">
             {% if uploaded_image %}
-            <div class="mt-4 fade show">
-                <h2 class="fade show">Uploaded Image:</h2>
-                <img src="{{ uploaded_image }}" alt="Uploaded Image" class="img-fluid rounded">
+            <div class="mt-4 px-2 fade show">
+                <img src="{{ uploaded_image }}" alt="Uploaded Image" class="img-fluid rounded" height="360"
+                    width="360" />
+            </div>
+            <div class="mt-4 px-2 fade show">
+                <img src="{{ cam_image }}" alt="CAM Image" class="img-fluid rounded" height="360" width="360" />
             </div>
             {% endif %}
         </div>
