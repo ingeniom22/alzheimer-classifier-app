@@ -5,7 +5,6 @@ from fastapi.templating import Jinja2Templates
 import uvicorn
 from fastapi import FastAPI, Request, File, UploadFile
 from fastapi.responses import HTMLResponse
-from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -26,7 +25,7 @@ app = FastAPI(
 app.add_middleware(CORSMiddleware, allow_origins=["*"])
 
 # Mount static folder, like demo pages, if any
-app.mount("/static", StaticFiles(directory="static/"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 model = torch.jit.load("model\predictor-torchscript.pt")
@@ -34,7 +33,7 @@ model.eval()
 
 
 def perform_prediction(image_bytes):
-    image = Image.open(io.BytesIO(image_bytes))
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     image = T.PILToTensor()(image).unsqueeze(0)
     softmax = model(image).data.cpu().numpy().squeeze()
 
@@ -46,13 +45,15 @@ def perform_prediction(image_bytes):
     # Loop over the classes with the largest softmax
     for i in range(len(idxs)):
         # Get softmax value
-        p = softmax[idxs[i]]
+        p = round(softmax[idxs[i]])
 
         # Get class name
         class_name = model.class_names[idxs[i]]
-        class_name = re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', class_name) # don't ask James  how this works
+        class_name = re.sub(
+            r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", class_name
+        )  # don't ask James how this works
 
-        class_probs.append({"class_name": class_name, "probability": p})
+        class_probs.append({"class_name": class_name, "probability": f"{p:.2%}"})
 
     print(class_probs)
     return class_probs
@@ -76,7 +77,7 @@ async def home_predict(request: Request, file: UploadFile = File(...)):
         {
             "request": request,
             "prediction_results": prediction,
-            "uploaded_image": encoded_image,
+            "uploaded_image": f"data:image/png;base64,{encoded_image}",
         },
     )
 

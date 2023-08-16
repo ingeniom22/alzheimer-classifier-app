@@ -5,29 +5,66 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alzheimer Classifier</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
+<body class="container mt-5">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
+        <img src="{{ url_for('static', path='img/logo-ede.png') }}" alt="EDE Logo" width="120" height="120"
+            class="d-inline-block align-text-top">
+        <a class="navbar-brand" href="#">Alzheimer Classifier</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Contact</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
 
-    <form action="/" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".jpg,.png" />
-        <button type="submit">Upload and Predict</button>
+    <form action="/" method="post" enctype="multipart/form-data" class="mb-3">
+        <div class="input-group">
+            <input type="file" name="file" accept=".jpg,.png" class="form-control">
+            <button type="submit" class="btn btn-primary">Upload and Predict</button>
+        </div>
     </form>
 
-    {% if prediction_results %}
-    <h2>Prediction Results:</h2>
-    <ul>
-        {% for result in prediction_results %}
-        <li>{{ result.class_name }}: {{ result.probability }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
+    <div class="row">
+        <div class="col-md-6 d-flex align-items-center justify-content-center">
+            {% if prediction_results %}
+            <div class="mt-4">
+                <h2>Prediction Results:</h2>
+                <ul class="list-group">
+                    {% for result in prediction_results %}
+                    <li class="list-group-item">{{ result.class_name }}: {{ result.probability }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
 
-    {% if uploaded_image %}
-    <h2>Uploaded Image:</h2>
-    <img src="data:image/png;base64,{{ uploaded_image }}" alt="Uploaded Image">
-    {% endif %}
-    
+        <div class="col-md-6 d-flex align-items-center justify-content-center">
+            {% if uploaded_image %}
+            <div class="mt-4">
+                <h2>Uploaded Image:</h2>
+                <img src="{{ uploaded_image }}" alt="Uploaded Image" class="img-fluid rounded">
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </body>
 
 </html>
