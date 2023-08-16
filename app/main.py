@@ -1,18 +1,20 @@
 import base64
 import io
 import re
-from fastapi.templating import Jinja2Templates
-import uvicorn
-from fastapi import FastAPI, Request, File, UploadFile
-from fastapi.responses import HTMLResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-
+import json
 import numpy as np
-
-from PIL import Image
 import torch
 import torchvision.transforms as T
+import uvicorn
+from fastapi import FastAPI, File, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from PIL import Image
+
+import plotly
+import plotly.express as px
 
 # Initialize API Server
 app = FastAPI(
@@ -32,7 +34,7 @@ model = torch.jit.load("model\predictor-torchscript.pt")
 model.eval()
 
 
-def perform_prediction(image_bytes):
+def get_prediction_chart(image_bytes):
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     image = T.PILToTensor()(image).unsqueeze(0)
     softmax = model(image).data.cpu().numpy().squeeze()
@@ -42,21 +44,34 @@ def perform_prediction(image_bytes):
     # Create a list to store class probabilities and names
     class_probs = []
 
+    label = []
+    prob = []
     # Loop over the classes with the largest softmax
     for i in range(len(idxs)):
         # Get softmax value
         p = round(softmax[idxs[i]])
-
         # Get class name
         class_name = model.class_names[idxs[i]]
         class_name = re.sub(
             r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", class_name
         )  # don't ask James how this works
 
-        class_probs.append({"class_name": class_name, "probability": f"{p:.2%}"})
+        label.append(class_name)
+        prob.append(p)
 
-    print(class_probs)
-    return class_probs
+        fig = px.bar(
+            x=label,
+            y=prob,
+            labels={
+                "x": "Alzheimer Stage",
+                "y": "Probability",
+            },
+            title="Prediction Result",
+        )
+        graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    print(label, prob)
+    return graphJSON
 
 
 @app.get("/")
@@ -69,7 +84,7 @@ async def home_predict(request: Request, file: UploadFile = File(...)):
     # Perform model prediction using the uploaded file
     image_data = await file.read()
     encoded_image = base64.b64encode(image_data).decode("utf-8")
-    prediction = perform_prediction(image_data)
+    prediction = get_prediction_chart(image_data)
 
     # Render the result using the template
     return templates.TemplateResponse(

@@ -1,2 +1,6 @@
 fastapi[all]
+pillow
 torch
+torchvision
+plotly
+pandas
