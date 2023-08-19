@@ -15,12 +15,11 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.image import preprocess_image, show_cam_on_image
 
 from modules.model import EfficientNetV2
 from modules.predictor import Predictor
-
-from pytorch_grad_cam.utils.image import preprocess_image, show_cam_on_image
-from pytorch_grad_cam import GradCAM
 
 # Initialize API Server
 app = FastAPI(
@@ -82,17 +81,18 @@ def get_prediction_chart(image_bytes):
         label.append(class_name)
         prob.append(p)
 
-        fig = px.bar(
-            x=prob,
-            y=label,
-            labels={
-                "x": "Probability",
-                "y": "Alzheimer Stage",
-            },
-            title="Prediction Result",
-        )
-        fig.update_layout(yaxis={"categoryorder": "total ascending"})
-        graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    fig = px.bar(
+        x=prob,
+        y=label,
+        labels={
+            "x": "Probability",
+            "y": "Alzheimer Stage",
+        },
+        title="Prediction Result",
+    )
+
+    fig.update_layout(yaxis={"categoryorder": "total ascending"})
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     # print(label, prob)
     return graphJSON
@@ -121,7 +121,7 @@ def get_gradcam_img(model, input_tensor, image_float):
     return cam_image
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
@@ -157,17 +157,17 @@ async def home_predict(request: Request, file: UploadFile = File(...)):
     )
 
 
-@app.get("/home")
+@app.get("/home", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse("home.html", {"request": request})
 
 
-@app.get("/about")
+@app.get("/about", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse("about.html", {"request": request})
 
 
-@app.get("/contact")
+@app.get("/contact", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse("contact.html", {"request": request})
 
