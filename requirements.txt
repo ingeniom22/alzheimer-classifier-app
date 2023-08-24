@@ -2,5 +2,6 @@ fastapi[all]
 pillow
 torch
 torchvision
+grad-cam
 plotly
 pandas

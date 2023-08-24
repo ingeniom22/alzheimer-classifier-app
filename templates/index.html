@@ -14,7 +14,7 @@
       <div class="container">
         <a class="navbar-brand mb-0 h1" href="#">
           <img src="{{ url_for('static', path = 'img/logo-ede.png') }}" alt="EDE Logo" width="120" height="120" href="/" class="d-inline-block align-text-center" />
-          Alzheimer Classifier
+          RKF45
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse" id="navbarNav">
@@ -33,12 +33,12 @@
       </div>
     </nav>
 
-    <div class="row d-flex align-items-center justify-content-center">
-      <div class="col-md-4 mb-5">
+    <div class="row d-flex align-items-center justify-content-center mb-2">
+      <div class="col-md-5 mb-5">
         <h1 class="display-4"><strong>Alzheimer Classifier With EfficientNetV2</strong></h1>
         <h2 class="display-6">Upload an MRI scan and analyze it</h2>
       </div>
-      <div class="col-md-4 mb-5">
+      <div class="col-md-5 mb-5">
         <img draggable="false" src="https://miro.medium.com/v2/resize:fit:1200/1*IPDUMGQBJU51qBkKP_4uhA.gif" alt="Backprop" class="img-fluid" />
       </div>
 
@@ -51,13 +51,26 @@
         </form>
       </div>
 
+      <!-- 
+      <div class="row d-flex align-items-center justify-content-center mb-5">
+        <div class="col-md-1 px-3 py-3 text-center">
+          <img src="{{ url_for('static', path = 'img/logo-telyu-portrait.png') }}" alt="Tel-U" class="img-fluid mx-auto" />
+        </div>
+        <div class="col-md-1 px-3 py-3 text-center">
+          <img src="{{ url_for('static', path = 'img/sdgs-ghwb.png') }}" alt="SDGS GHWB" class="img-fluid mx-auto w-100 h-100" />
+        </div>
+        <div class="col-md-1 px-3 py-3 text-center">
+          <img src="{{ url_for('static', path = 'img/sdgs-un.png') }}" alt="SDGS UNS" class="img-fluid mx-auto w-100 h-100" />
+        </div>
+      </div>  -->
+
       {% if prediction_results %}
-        <div class="col-md-8">
+        <div class="col-md-10">
           <h1 class="display-4">Class Probability Outputs</h1>
           <p class="fs-5">This section presents the analysis report of the uploaded MRI scan using the Alzheimer Classifier model. The following charts show the predicted probabilities for each class.</p>
         </div>
 
-        <div class="col-md-8">
+        <div class="col-md-10">
           <div id="chart" class="chart"></div>
           <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
           <script type="text/javascript">
@@ -68,16 +81,16 @@
       {% endif %}
 
       {% if uploaded_image %}
-        <div class="col-md-8">
+        <div class="col-md-10">
           <h1 class="display-4">GradCAM Analysis</h1>
           <p class="fs-5">In this section, the GradCAM heatmap analysis is displayed for the uploaded MRI scan. GradCAM provides insight into the regions of the image that contribute most to the model's prediction. The heatmap highlights areas of interest that influenced the model's decision.</p>
         </div>
         <div class="row d-flex align-items-center justify-content-center">
-          <div class="col-md-4 px-3 py-3">
-            <img src="{{ uploaded_image }}" alt="Uploaded Image" class="img-fluid rounded" height="360" width="360" />
+          <div class="col-md-5 py-3">
+            <img src="{{ uploaded_image }}" alt="Uploaded Image" class="img-fluid rounded mx-auto d-block" height="360" width="360" />
           </div>
-          <div class="col-md-4 px-3 py-3">
-            <img src="{{ cam_image }}" alt="CAM Image" class="img-fluid rounded" height="360" width="360" />
+          <div class="col-md-5 py-3">
+            <img src="{{ cam_image }}" alt="CAM Image" class="img-fluid rounded mx-auto d-block" height="360" width="360" />
           </div>
         </div>
       {% endif %}
