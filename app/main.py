@@ -7,6 +7,7 @@ import numpy as np
 import plotly
 import plotly.express as px
 import torch
+from torch import nn
 import torchvision.transforms as T
 import uvicorn
 from fastapi import FastAPI, File, Request, UploadFile
@@ -16,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image
 from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.image import preprocess_image, show_cam_on_image
+from pytorch_grad_cam.utils.image import show_cam_on_image
 
 from modules.model import EfficientNetV2
 from modules.predictor import Predictor
@@ -33,17 +34,16 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"])
 
 # Mount static folder, like demo pages, if any
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Initialize Jinja2Templates
 templates = Jinja2Templates(directory="templates")
 
+# Load the model and other necessary objects
+model = EfficientNetV2(num_classes=4, dropout=0.2)
 checkpoint = torch.load(
-    "checkpoints\model-checkpoint (1).pt", map_location=torch.device("cpu")
+    "checkpoints/model-checkpoint.pt", map_location=torch.device("cpu")
 )
 new_state_dict = {k.replace("module.", ""): v for k, v in checkpoint.items()}
-model = EfficientNetV2(num_classes=4, dropout=0.2)
-
-# print(set(model.state_dict().keys()))
-# print(set(new_state_dict.keys()))
-
 model.load_state_dict(new_state_dict)
 model.eval()
 
@@ -58,7 +58,17 @@ predictor = Predictor(
     std=std,
 )
 
+transforms = T.Compose(
+    [
+        T.Resize([256, 256], antialias=True),
+        T.CenterCrop(224),
+        T.ToTensor(),
+        T.Normalize(mean, std),
+    ]
+)
 
+
+# Helper functions for prediction and GradCAM
 def get_prediction_chart(image_bytes):
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     image = T.PILToTensor()(image).unsqueeze(0)
@@ -68,16 +78,13 @@ def get_prediction_chart(image_bytes):
 
     label = []
     prob = []
-    # Loop over the classes with the largest softmax
+
     for i in range(len(idxs)):
-        # Get softmax value
-        p = round(softmax[idxs[i]])
-        # Get class name
+        p = round(softmax[idxs[i]], 2)
         class_name = class_names[idxs[i]]
         class_name = re.sub(
             r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", class_name
-        )  # don't ask James how this works
-
+        )
         label.append(class_name)
         prob.append(p)
 
@@ -94,33 +101,29 @@ def get_prediction_chart(image_bytes):
     fig.update_layout(yaxis={"categoryorder": "total ascending"})
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-    # print(label, prob)
     return graphJSON
 
 
 def prep_img_for_gradcam(image_bytes):
-    """A function that gets a URL of an image,
-    and returns a numpy image and a preprocessed
-    torch tensor ready to pass to the model"""
-
-    img = np.array(Image.open(io.BytesIO(image_bytes)).convert("RGB"))
-    rgb_img_float = np.float32(img) / 255
-    input_tensor = preprocess_image(rgb_img_float, mean=mean, std=std)
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    input_tensor = transforms(img)
+    rgb_img_float = np.array(T.ToPILImage()(input_tensor)) / 255
     return img, rgb_img_float, input_tensor
 
 
 def get_gradcam_img(model, input_tensor, image_float):
-    target_layers = [model.model.features[-1][0]]
+    target_layers = [model.base_model.features[-1][0]]
 
     with GradCAM(model=model, target_layers=target_layers, use_cuda=False) as cam:
         grayscale_cam = cam(
-            input_tensor=input_tensor,
+            input_tensor=input_tensor.unsqueeze(0),
         )[0, :]
 
     cam_image = show_cam_on_image(image_float, grayscale_cam, use_rgb=True)
     return cam_image
 
 
+# Define the API routes
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -128,7 +131,6 @@ def home(request: Request):
 
 @app.post("/", response_class=HTMLResponse)
 async def home_predict(request: Request, file: UploadFile = File(...)):
-    # Perform model prediction using the uploaded file
     image_data = await file.read()
     encoded_image = base64.b64encode(image_data).decode("utf-8")
     prediction = get_prediction_chart(image_data)
@@ -145,7 +147,6 @@ async def home_predict(request: Request, file: UploadFile = File(...)):
     cam_png = buffer.getvalue()
     encoded_cam_png = base64.b64encode(cam_png).decode("utf-8")
 
-    # Render the result using the template
     return templates.TemplateResponse(
         "index.html",
         {

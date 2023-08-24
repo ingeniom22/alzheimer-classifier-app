@@ -7,13 +7,7 @@ from torchvision.models import efficientnet_v2_s
 class EfficientNetV2(nn.Module):
     def __init__(self, num_classes: int = 4, dropout: float = 0.7) -> None:
         super().__init__()
-        self.model = efficientnet_v2_s(weights=None)
-
-        for idx, layer in enumerate(self.model.features):
-            if idx > 7:
-                layer.requires_grad = True
-            else:
-                layer.requires_grad = False
+        self.base_model = efficientnet_v2_s(weights=None)
 
         classifier = nn.Sequential(
             OrderedDict(
@@ -27,7 +21,7 @@ class EfficientNetV2(nn.Module):
             )
         )
 
-        self.model.classifier = classifier
+        self.base_model.classifier = classifier
 
     def forward(self, x):
-        return self.model(x)
+        return self.base_model(x)
